@@ -1,32 +1,27 @@
 package netology.springbootjavahibernate.persons.repository;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Optional;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
+import jakarta.persistence.OrderBy;
 
-@Repository
-@Transactional
-public class PersonRepository  {
-    @PersistenceContext
-    private EntityManager entityManager;
+public interface PersonRepository extends JpaRepository<PersonEntity, Integer>, JpaSpecificationExecutor<PersonEntity> {
 
-    public Collection<PersonEntity> getPersonsByCity(String city) {
-        return entityManager
-                .createQuery("from PersonEntity p where p.cityOfLiving = :city", PersonEntity.class)
-                .setParameter("city", city)
-                .getResultList();
-    }
+    @Query("""
+            select distinct p
+            from PersonEntity p
+            where p.cityOfLiving = :city
+            """)
+    Collection<PersonEntity> getPersonsByCity(String city);
 
-    public List<PersonEntity> findAll() {
-        return entityManager
-                .createQuery("from PersonEntity p", PersonEntity.class)
-                .getResultList()
-                .stream()
-                .toList();
-    }
+    @OrderBy("age ASC")
+    Collection<PersonEntity> getPersonsByAgeLessThan(Integer age);
+
+    PersonEntity getFirstPersonByNameAndSurnameAndAge(String name, String surname, Integer age);
+
+    Optional<PersonEntity> getFirstPersonByNameAndSurname(String name, String surname);
 }
